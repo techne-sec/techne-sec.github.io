@@ -1,0 +1,4 @@
+baseURL = 'https://techne-sec.github.io/techne-blog/'
+languageCode = 'pt-br'
+title = 'techne-blog'
+theme = 'PaperMod'
