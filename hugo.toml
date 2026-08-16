@@ -2,6 +2,7 @@ baseURL = 'https://techne-sec.github.io/'
 locale = 'pt-br'
 title = 'techne-blog'
 theme = 'PaperMod'
+paginate = 3
 
 [[menu.main]]
   name = "About"
