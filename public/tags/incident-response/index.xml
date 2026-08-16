@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>techne-blog</title>
-    <link>http://localhost:42567/</link>
-    <description>Recent content on techne-blog</description>
+    <title>Incident-Response on techne-blog</title>
+    <link>http://localhost:42567/tags/incident-response/</link>
+    <description>Recent content in Incident-Response on techne-blog</description>
     <generator>Hugo</generator>
     <language>pt-br</language>
-    <lastBuildDate>Sat, 15 Aug 2026 18:24:36 -0400</lastBuildDate>
-    <atom:link href="http://localhost:42567/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>About</title>
-      <link>http://localhost:42567/about/</link>
-      <pubDate>Sat, 15 Aug 2026 18:24:36 -0400</pubDate>
-      <guid>http://localhost:42567/about/</guid>
-      <description>&lt;p&gt;Este site é um espaço dedicado a estudos, projetos e análises técnicas em &lt;strong&gt;Segurança da Informação&lt;/strong&gt;, com foco em &lt;em&gt;Segurança de Infraestrutura&lt;/em&gt;, &lt;em&gt;Blue Team&lt;/em&gt;, detecção e operações de segurança.&lt;/p&gt;
-&lt;p&gt;O conteúdo aqui reúne experimentos, investigações e projetos desenvolvidos a partir de problemas e cenários de segurança reais ou reproduzidos em laboratório. A proposta é documentar não apenas &lt;strong&gt;resultados&lt;/strong&gt;, mas também &lt;strong&gt;processos, decisões técnicas, evidências e aprendizados&lt;/strong&gt; envolvidos em cada trabalho.&lt;/p&gt;</description>
-    </item>
+    <lastBuildDate>Sat, 01 Aug 2026 00:00:00 -0400</lastBuildDate>
+    <atom:link href="http://localhost:42567/tags/incident-response/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Redirect Malicioso via Injeção Server-Side: Análise de Caso e Mitigação</title>
       <link>http://localhost:42567/posts/redirect-malicioso-injecao-server-side/</link>

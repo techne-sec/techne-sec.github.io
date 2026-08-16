@@ -2,16 +2,35 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:35133/about/</loc>
+    <loc>http://localhost:42567/about/</loc>
     <lastmod>2026-08-15T18:24:36-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:35133/</loc>
+    <loc>http://localhost:42567/</loc>
     <lastmod>2026-08-15T18:24:36-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:35133/archives/</loc>
+    <loc>http://localhost:42567/tags/blue-team/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:35133/categories/</loc>
+    <loc>http://localhost:42567/tags/incident-response/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
   </url><url>
-    <loc>http://localhost:35133/tags/</loc>
+    <loc>http://localhost:42567/tags/malware/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:42567/posts/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:42567/posts/redirect-malicioso-injecao-server-side/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:42567/tags/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:42567/tags/wordpress/</loc>
+    <lastmod>2026-08-01T00:00:00-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:42567/archives/</loc>
+  </url><url>
+    <loc>http://localhost:42567/categories/</loc>
   </url>
 </urlset>
