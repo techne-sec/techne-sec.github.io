@@ -41,14 +41,11 @@ Implementações, experimentos e trabalhos práticos.
 **Documentação**
 Registros técnicos, procedimentos, configurações e referências desenvolvidas durante os projetos e estudos.
 
-## Links
-
 - [LinkedIn](https://www.linkedin.com/in/techne-sec/)
 - [GitHub](https://github.com/techne-sec)
 - [Discord](https://discord.com/invite/pirateship)
 - [YouTube](https://www.youtube.com/@technesec)
 
-Mantenedor: João Guedes a.k.a Techne
 """
   [params.label]
     text = "techne-blog"
