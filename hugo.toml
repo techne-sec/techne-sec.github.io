@@ -20,8 +20,10 @@ theme = 'PaperMod'
 
 [params]
   [params.homeInfoParams]
-    Title = "Segurança da Informação, acertando e errando muito na prática"
+    Title = "Segurança da Informação"
     Content = """
+*acertando e errando muito na prática*
+
 Um espaço dedicado com muito amor à Segurança da Informação, reunindo conhecimento técnico, estudos e trabalhos desenvolvidos ao longo da prática.
 
 ## O que temos?
