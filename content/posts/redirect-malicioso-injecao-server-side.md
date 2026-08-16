@@ -1,6 +1,6 @@
 +++
 date = '2026-08-01T00:00:00-04:00'
-draft = true
+draft = false
 title = 'Redirect Malicioso via Injeção Server-Side: Análise de Caso e Mitigação'
 tags = ['wordpress', 'malware', 'incident-response', 'blue-team']
 +++
