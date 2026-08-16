@@ -1,4 +1,47 @@
 baseURL = 'https://techne-sec.github.io/'
-languageCode = 'pt-br'
+locale = 'pt-br'
 title = 'techne-blog'
 theme = 'PaperMod'
+
+[[menu.main]]
+  name = "About"
+  url = "/about/"
+  weight = 1
+
+[[menu.main]]
+  name = "Archive"
+  url = "/archives/"
+  weight = 2
+
+[[menu.main]]
+  name = "Tags"
+  url = "/tags/"
+  weight = 3
+
+[params]
+  [params.homeInfoParams]
+    Title = "Segurança da Informação, acertando e errando muito na prática"
+    Content = """
+Um espaço dedicado com muito amor à Segurança da Informação, reunindo conhecimento técnico, estudos e trabalhos desenvolvidos ao longo da prática.
+
+## O que temos?
+
+**Artigos**
+Textos técnicos, análises e discussões sobre Segurança da Informação.
+
+**Pesquisas**
+Investigações e estudos aprofundados sobre tecnologias, técnicas e cenários de segurança.
+
+**Projetos**
+Implementações, experimentos e trabalhos práticos.
+
+**Documentação**
+Registros técnicos, procedimentos, configurações e referências desenvolvidas durante os projetos e estudos.
+
+
+Mantenedor: João Guedes a.k.a Techne
+"""
+  [params.label]
+    text = "techne-blog"
+    icon = "/images/logo.png"
+    iconHeight = 35
